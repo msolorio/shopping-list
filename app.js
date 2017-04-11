@@ -1,34 +1,42 @@
 $(function() {
 
   var shoppingList = {
-    // state object
+    // STATE ////////////////////////////////////////////
     state: {
-      items: [],
-      idCount: 0
+      items: []
     },
 
-    // functions that modify state
-
-    // adds an item object to the items array
+    // STATE MODIFIERS ///////////////////////////////////
     addItem: function(state, itemName) {
-      var itemObj = {
+      state.items.push({
         name: itemName,
-        checked: null,
-        itemId: state.idCount
-      };
-      state.items.push(itemObj);
-      state.idCount++;
+        checked: false
+      });
     },
 
-    updateCheckStatus: function(state, buttonClicked) {
-      console.log(buttonClicked.parents('.js-list-item').data('item-id'));
+    updateCheckStatus: function(state, clickedItemId) {
+      state.items.forEach(function(item, index) {
+        if (index === clickedItemId) {
+          item.checked = item.checked ? false : true;
+        }
+      });
     },
 
+    removeItem: function(state, clickedItemId) {
+      state.items.forEach(function(item, index) {
+        if (index === clickedItemId) {
+          state.items.splice(index, 1);
+        }
+      });
+    },
+
+    // STATE RENDER ////////////////////////////////////////////////
     renderItems: function(state, element) {
-      var items = state.items.map(function(item) {
+      var items = state.items.map(function(item, index) {
+        var checkedClass = item.checked ? ' shopping-item__checked' : '';
         return (
-          '<li class="js-list-item" data-item-id="' + item.itemId + '">\
-            <span class="shopping-item ' + item.checked + '">' + item.name + '</span>\
+          '<li class="js-list-item" data-item-id="' + index + '">\
+            <span class="shopping-item' + checkedClass + '">' + item.name + '</span>\
             <div class="shopping-item-controls">\
               <button class="shopping-item-toggle js-button-check">\
                 <span class="button-label">check</span>\
@@ -44,6 +52,7 @@ $(function() {
     }
   };
 
+  // EVENT LISTENERS ////////////////////////////////////////////////////////////
   // handle adding item
   $('.js-shopping-list-form').submit(function(event) {
     event.preventDefault();
@@ -52,17 +61,23 @@ $(function() {
       $('.js-shopping-list-entry').val()
     );
     shoppingList.renderItems(shoppingList.state, $('.js-shopping-list'));
+    this.reset();
   });
 
   // handle clicking check
   $('.shopping-list').on('click', '.js-button-check', function(event) {
-    console.log('checked button clicked');
-    shoppingList.updateCheckStatus(shoppingList.state, $(this));
+    var clickedItemId = $(this).closest('.js-list-item').data('item-id');
+
+    shoppingList.updateCheckStatus(shoppingList.state, clickedItemId);
+    shoppingList.renderItems(shoppingList.state, $('.js-shopping-list'));
   });
 
   // handle clicking delete
   $('.shopping-list').on('click', '.js-button-delete', function(event) {
-    console.log('delete button clicked');
+    var clickedItemId = $(this).closest('.js-list-item').data('item-id');
+
+    shoppingList.removeItem(shoppingList.state, clickedItemId);
+    shoppingList.renderItems(shoppingList.state, $('.js-shopping-list'));
   });
 
 });
